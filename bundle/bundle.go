@@ -1,4 +1,4 @@
-package apis
+package bundle
 
 import (
 	"bytes"
@@ -53,7 +53,8 @@ func NewBundleFromFile(path string) (*Bundle, error) {
 		return nil, fmt.Errorf("stat bundle failed: %v", err)
 	}
 
-	_, err = bundleFile.Seek(types.VersionLength+types.MetaSizeLength, 2)
+	dataSize := stat.Size()
+	_, err = bundleFile.Seek(dataSize-(types.VersionLength+types.MetaSizeLength), 0)
 	if err != nil {
 		return nil, fmt.Errorf("seek version and meta size failed: %v", err)
 	}
@@ -75,7 +76,7 @@ func NewBundleFromFile(path string) (*Bundle, error) {
 	}
 
 	buf = make([]byte, metaSize)
-	_, err = bundleFile.Seek(int64(metaSize)+types.VersionLength+types.MetaSizeLength, 2)
+	_, err = bundleFile.Seek(dataSize-(int64(metaSize)+types.VersionLength+types.MetaSizeLength), 0)
 	if err != nil {
 		return nil, fmt.Errorf("seek bundle meta failed: %v", err)
 	}
@@ -217,6 +218,14 @@ func (b *Bundle) FinalizeBundle() (io.ReadCloser, int64, error) {
 		bundleFile.Close()
 		return nil, 0, fmt.Errorf("written size mismatch, expect: %d, actual: %d", b.metaSize+types.MetaSizeLength+types.VersionLength, written)
 	}
+
+	_, err = bundleFile.Seek(0, 0)
+	if err != nil {
+		bundleFile.Truncate(b.dataSize)
+		bundleFile.Close()
+		return nil, 0, fmt.Errorf("seek to bundle start failed: %v", err)
+	}
+
 	b.dataSize += int64(b.metaSize + types.MetaSizeLength + types.VersionLength)
 	b.finalized = true
 	return bundleFile, b.dataSize, nil
@@ -233,4 +242,16 @@ func (b *Bundle) GetBundledObject() (io.ReadCloser, int64, error) {
 	}
 
 	return bundleFile, b.dataSize, nil
+}
+
+func (b *Bundle) GetBundleMetaSize() uint64 {
+	return b.metaSize
+}
+
+func (b *Bundle) GetBundleSize() uint64 {
+	return uint64(b.dataSize)
+}
+
+func (b *Bundle) GetBundleVersion() types.BundleVersion {
+	return b.version
 }
