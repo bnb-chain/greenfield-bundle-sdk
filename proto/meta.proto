@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+option go_package = "/types";
+
+enum HashAlgo {
+  Unknown = 0;
+  SHA256 = 1;
+}
+
+enum BundleVersion {
+  V1 = 0;
+}
+
+message ObjectMeta {
+  string name = 1;
+  uint64 offset = 2;
+  uint64 size = 3;
+  HashAlgo hash_algo = 4;
+  bytes hash = 5;
+  string content_type = 6;
+  map<string, string> tags = 7;
+}
+
+message BundleMeta {
+  repeated ObjectMeta meta = 1;
+}
