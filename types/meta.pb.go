@@ -20,6 +20,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// HashAlgo specifies the hash algorithm used to verify the integrity of the objects in the bundle.
 type HashAlgo int32
 
 const (
@@ -66,6 +67,7 @@ func (HashAlgo) EnumDescriptor() ([]byte, []int) {
 	return file_proto_meta_proto_rawDescGZIP(), []int{0}
 }
 
+// BundleVersion specifies the bundle version used for the current bundle.
 type BundleVersion int32
 
 const (
@@ -109,18 +111,26 @@ func (BundleVersion) EnumDescriptor() ([]byte, []int) {
 	return file_proto_meta_proto_rawDescGZIP(), []int{1}
 }
 
+// ObjectMeta defines metadata for each object in the bundle.
 type ObjectMeta struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Name        string            `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Offset      uint64            `protobuf:"varint,2,opt,name=offset,proto3" json:"offset,omitempty"`
-	Size        uint64            `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty"`
-	HashAlgo    HashAlgo          `protobuf:"varint,4,opt,name=hash_algo,json=hashAlgo,proto3,enum=HashAlgo" json:"hash_algo,omitempty"`
-	Hash        []byte            `protobuf:"bytes,5,opt,name=hash,proto3" json:"hash,omitempty"`
-	ContentType string            `protobuf:"bytes,6,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
-	Tags        map[string]string `protobuf:"bytes,7,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	// name is the name of the object.
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// offset indicates the object's starting position in the bundle.
+	Offset uint64 `protobuf:"varint,2,opt,name=offset,proto3" json:"offset,omitempty"`
+	// size is the size of the object.
+	Size uint64 `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty"`
+	// hash_algo indicates the hash algorithm used for computing the hash.
+	HashAlgo HashAlgo `protobuf:"varint,4,opt,name=hash_algo,json=hashAlgo,proto3,enum=HashAlgo" json:"hash_algo,omitempty"`
+	// hash is the hash result of the object.
+	Hash []byte `protobuf:"bytes,5,opt,name=hash,proto3" json:"hash,omitempty"`
+	// content_type indicates the content type of the object.
+	ContentType string `protobuf:"bytes,6,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
+	// tags indicates the tags of the object, each object can be tagged with several attributes.
+	Tags map[string]string `protobuf:"bytes,7,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
 func (x *ObjectMeta) Reset() {
@@ -204,11 +214,13 @@ func (x *ObjectMeta) GetTags() map[string]string {
 	return nil
 }
 
+// BundleMeta stores the metadata of all the objects in the bundle.
 type BundleMeta struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// meta indicates the object meta arrays of the bundle.
 	Meta []*ObjectMeta `protobuf:"bytes,1,rep,name=meta,proto3" json:"meta,omitempty"`
 }
 

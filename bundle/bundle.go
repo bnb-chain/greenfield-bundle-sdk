@@ -1,3 +1,4 @@
+// Package bundle defines the APIs for operating Greenfield bundle.
 package bundle
 
 import (
@@ -12,17 +13,25 @@ import (
 	"github.com/bnb-chain/greenfield-bundle-sdk/types"
 )
 
+// Bundle indicates the bundle instance for assembling or parsing a Greenfield bundle.
 type Bundle struct {
-	version        types.BundleVersion
-	metaSize       uint64
-	meta           types.BundleMeta
-	bundleFile     *os.File // For append usage
+	// version indicates the version of the bundle.
+	version types.BundleVersion
+	// metaSize indicates the size of the bundle's metadata.
+	metaSize uint64
+	// meta indicates the metadata for all the objects within the bundle.
+	meta types.BundleMeta
+	// bundleFile is the file pointer for appending object into the bundle, should not be used in other cases.
+	bundleFile *os.File
+	// bundleFileName indicates the path of the bundled object.
 	bundleFileName string
-	dataSize       int64
-
+	// dataSize indicates the size of the bundled object.
+	dataSize int64
+	// finalized indicates whether the bundle is finalized, once a bundle is finalized, it can't be appended more objects.
 	finalized bool
 }
 
+// NewBundle creates a new empty bundle with none object bundled.
 func NewBundle() (*Bundle, error) {
 	bundleFile, err := os.CreateTemp("", types.TempBundleFilePrefix)
 	if err != nil {
@@ -41,6 +50,7 @@ func NewBundle() (*Bundle, error) {
 	}, nil
 }
 
+// NewBundleFromFile creates a bundle instance for a bundled object.
 func NewBundleFromFile(path string) (*Bundle, error) {
 	bundleFile, err := os.Open(path)
 	defer bundleFile.Close()
@@ -101,6 +111,7 @@ func NewBundleFromFile(path string) (*Bundle, error) {
 	return bundle, nil
 }
 
+// AppendObject is used for appending a new object into the non-finalized bundle.
 func (b *Bundle) AppendObject(name string, size int64, reader io.Reader, options *types.AppendObjectOptions) (*types.ObjectMeta, error) {
 	if b.finalized {
 		return nil, fmt.Errorf("append not allowed")
@@ -142,6 +153,7 @@ func (b *Bundle) AppendObject(name string, size int64, reader io.Reader, options
 	return objMeta, nil
 }
 
+// GetObjectMeta returns the metadata of the specified object.
 func (b *Bundle) GetObjectMeta(name string) *types.ObjectMeta {
 	for _, objMeta := range b.meta.Meta {
 		if objMeta.Name == name {
@@ -152,6 +164,7 @@ func (b *Bundle) GetObjectMeta(name string) *types.ObjectMeta {
 	return nil
 }
 
+// GetObject returns the object content from the bundled object.
 func (b *Bundle) GetObject(name string) (io.Reader, int64, error) {
 	objMeta := b.GetObjectMeta(name)
 	if objMeta == nil {
@@ -175,6 +188,7 @@ func (b *Bundle) GetObject(name string) (io.Reader, int64, error) {
 	return bytes.NewReader(buf), int64(objMeta.Size), nil
 }
 
+// FinalizeBundle is used to finalize a bundle, once the bundle is finalized, it can't be appended more objects.
 func (b *Bundle) FinalizeBundle() (io.ReadCloser, int64, error) {
 	if b.finalized {
 		return nil, 0, fmt.Errorf("bundle finalized")
@@ -215,6 +229,7 @@ func (b *Bundle) FinalizeBundle() (io.ReadCloser, int64, error) {
 	return b.bundleFile, b.dataSize, nil
 }
 
+// GetBundledObject returns the bundled object once the bundle is finalized.
 func (b *Bundle) GetBundledObject() (io.ReadCloser, int64, error) {
 	if !b.finalized {
 		return nil, 0, fmt.Errorf("bundle not finalized")
@@ -228,14 +243,17 @@ func (b *Bundle) GetBundledObject() (io.ReadCloser, int64, error) {
 	return bundleFile, b.dataSize, nil
 }
 
+// GetBundleMetaSize returns the metadata size of the bundle.
 func (b *Bundle) GetBundleMetaSize() uint64 {
 	return b.metaSize
 }
 
+// GetBundleSize returns the size of the bundled object.
 func (b *Bundle) GetBundleSize() uint64 {
 	return uint64(b.dataSize)
 }
 
+// GetBundleVersion returns the version of the bundle.
 func (b *Bundle) GetBundleVersion() types.BundleVersion {
 	return b.version
 }
