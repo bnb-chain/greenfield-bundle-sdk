@@ -96,8 +96,8 @@ func TestNewBundle(t *testing.T) {
 	for _, object := range objects {
 		buf := bytes.NewReader(object.data)
 		objMeta, err := bundle.AppendObject(object.name, object.size, buf, nil)
-		totoalDataSize += int64(objMeta.Size)
 		require.NoError(t, err)
+		totoalDataSize += int64(objMeta.Size)
 	}
 
 	bundledObject, totalSize, err := bundle.FinalizeBundle()
@@ -123,8 +123,8 @@ func TestNewBundle(t *testing.T) {
 	require.Equal(t, types.BundleVersion_V1, bundle2.version)
 
 	for _, obj := range objects {
-		objMeta, err := bundle2.GetObjectMeta(obj.name)
-		require.NoError(t, err)
+		objMeta := bundle2.GetObjectMeta(obj.name)
+		require.NotNil(t, objMeta)
 		require.Equal(t, obj.size, int64(objMeta.Size))
 
 		objData, _, err := bundle2.GetObject(obj.name)
