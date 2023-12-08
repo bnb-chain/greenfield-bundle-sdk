@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 
 	"google.golang.org/protobuf/proto"
@@ -165,7 +166,7 @@ func (b *Bundle) GetObjectMeta(name string) *types.ObjectMeta {
 }
 
 // GetObject returns the object content from the bundled object.
-func (b *Bundle) GetObject(name string) (io.Reader, int64, error) {
+func (b *Bundle) GetObject(name string) (io.ReadCloser, int64, error) {
 	objMeta := b.GetObjectMeta(name)
 	if objMeta == nil {
 		return nil, 0, fmt.Errorf("object not found")
@@ -185,7 +186,7 @@ func (b *Bundle) GetObject(name string) (io.Reader, int64, error) {
 	if uint64(readBytes) != objMeta.Size {
 		return nil, 0, fmt.Errorf("object size mismatch, expect: %d, actual: %d", objMeta.Size, readBytes)
 	}
-	return bytes.NewReader(buf), int64(objMeta.Size), nil
+	return ioutil.NopCloser(bytes.NewReader(buf)), int64(objMeta.Size), nil
 }
 
 // FinalizeBundle is used to finalize a bundle, once the bundle is finalized, it can't be appended more objects.
