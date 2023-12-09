@@ -190,7 +190,7 @@ func (b *Bundle) GetObject(name string) (io.ReadCloser, int64, error) {
 }
 
 // FinalizeBundle is used to finalize a bundle, once the bundle is finalized, it can't be appended more objects.
-func (b *Bundle) FinalizeBundle() (io.ReadCloser, int64, error) {
+func (b *Bundle) FinalizeBundle() (io.ReadSeekCloser, int64, error) {
 	if b.finalized {
 		return nil, 0, fmt.Errorf("bundle finalized")
 	}
@@ -231,7 +231,7 @@ func (b *Bundle) FinalizeBundle() (io.ReadCloser, int64, error) {
 }
 
 // GetBundledObject returns the bundled object once the bundle is finalized.
-func (b *Bundle) GetBundledObject() (io.ReadCloser, int64, error) {
+func (b *Bundle) GetBundledObject() (io.ReadSeekCloser, int64, error) {
 	if !b.finalized {
 		return nil, 0, fmt.Errorf("bundle not finalized")
 	}
