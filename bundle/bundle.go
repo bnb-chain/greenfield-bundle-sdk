@@ -249,6 +249,11 @@ func (b *Bundle) GetBundleMetaSize() uint64 {
 	return b.metaSize
 }
 
+// GetBundleObjectsMeta returns the objects' metadata within the bundle.
+func (b *Bundle) GetBundleObjectsMeta() []*types.ObjectMeta {
+	return b.meta.GetMeta()
+}
+
 // GetBundleSize returns the size of the bundled object.
 func (b *Bundle) GetBundleSize() uint64 {
 	return uint64(b.dataSize)
