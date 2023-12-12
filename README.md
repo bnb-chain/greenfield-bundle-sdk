@@ -78,19 +78,21 @@ message FileMeta {
 Here is the guide for how to aggregate batch objects as a bundle, and how to parse a bundled object. As for how to
 interact with Greenfield, you should refer to [Greenfield GO SDK](https://github.com/bnb-chain/greenfield-go-sdk).
 
-### Aggregate objects as a bundle
+### Aggregate various objects as bundle
 Follow the steps below to aggregate multiple objects into a single bundle.
 
 1. Use the `NewBundle` function to create an empty bundle.
 2. Use the bundle's `AppendObject` method to add objects to the bundle individually.
 3. Use the bundle's `FinalizeBundle` method to seal the bundle, preventing any further objects from being added.
+4. To release resources after use, utilize the `Close` method of the bundle.
 
-## Extract objects from bundled object
+### Extract objects from bundled object
 Follow the steps below to extract various objects from a bundle.
 
 1. Open the bundled object as a bundle instance using `NewBundleFromFile`.
 2. Retrieve all the objects' meta within the bundle using the bundle's `GetBundleObjectsMeta` method.
 3. Access various objects one by one using the bundle's `GetObject` method.
+4. To release resources after use, utilize the `Close` method of the bundle.
 
 ## Contribution
 Thank you for considering helping with the source code! We appreciate contributions from anyone on the internet, no

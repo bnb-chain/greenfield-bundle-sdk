@@ -22,8 +22,10 @@ type Bundle struct {
 	metaSize uint64
 	// meta indicates the metadata for all the objects within the bundle.
 	meta types.BundleMeta
-	// bundleFile is the file pointer for appending object into the bundle, should not be used in other cases.
-	bundleFile *os.File
+	// writeFile is the file pointer for appending object into the bundle, should not be used in other cases.
+	writeFile *os.File
+	// readFile is the file pointer for getting object from the bundle, should not be used in other cases.
+	readFile *os.File
 	// bundleFileName indicates the path of the bundled object.
 	bundleFileName string
 	// dataSize indicates the size of the bundled object.
@@ -39,11 +41,17 @@ func NewBundle() (*Bundle, error) {
 		return nil, fmt.Errorf("create temp bundle file failed: %v", err)
 	}
 
+	readFile, err := os.Open(bundleFile.Name())
+	if err != nil {
+		return nil, fmt.Errorf("open temp bundle file for read failed: %v", err)
+	}
+
 	return &Bundle{
 		version:        types.BundleVersion_V1,
 		metaSize:       0,
 		meta:           types.BundleMeta{},
-		bundleFile:     bundleFile,
+		writeFile:      bundleFile,
+		readFile:       readFile,
 		bundleFileName: bundleFile.Name(),
 		dataSize:       0,
 
@@ -54,7 +62,6 @@ func NewBundle() (*Bundle, error) {
 // NewBundleFromFile creates a bundle instance for a bundled object.
 func NewBundleFromFile(path string) (*Bundle, error) {
 	bundleFile, err := os.Open(path)
-	defer bundleFile.Close()
 	if err != nil {
 		return nil, fmt.Errorf("open bundle failed: %v", err)
 	}
@@ -99,7 +106,8 @@ func NewBundleFromFile(path string) (*Bundle, error) {
 		version:        types.BundleVersion(version),
 		metaSize:       metaSize,
 		meta:           types.BundleMeta{},
-		bundleFile:     nil,
+		writeFile:      nil,
+		readFile:       bundleFile,
 		bundleFileName: path,
 		dataSize:       stat.Size(),
 		finalized:      true,
@@ -113,6 +121,7 @@ func NewBundleFromFile(path string) (*Bundle, error) {
 }
 
 // AppendObject is used for appending a new object into the non-finalized bundle.
+// Please note that this function is not thread-safe. When calling it, make sure to control concurrent invocations properly.
 func (b *Bundle) AppendObject(name string, size int64, reader io.Reader, options *types.AppendObjectOptions) (*types.ObjectMeta, error) {
 	if b.finalized {
 		return nil, fmt.Errorf("append not allowed")
@@ -140,12 +149,12 @@ func (b *Bundle) AppendObject(name string, size int64, reader io.Reader, options
 		objMeta.Tags = options.Tags // map copy here is ok
 	}
 
-	written, err := io.Copy(b.bundleFile, reader)
+	written, err := io.Copy(b.writeFile, reader)
 	if err != nil {
 		return nil, fmt.Errorf("copy to bundle failed: %v", err)
 	}
 	if written != size {
-		b.bundleFile.Truncate(b.dataSize)
+		b.writeFile.Truncate(b.dataSize)
 		return nil, fmt.Errorf("written size mismatch, expect: %d, actual: %d", size, written)
 	}
 
@@ -172,14 +181,8 @@ func (b *Bundle) GetObject(name string) (io.ReadCloser, int64, error) {
 		return nil, 0, fmt.Errorf("object not found")
 	}
 
-	bundleFile, err := os.Open(b.bundleFileName)
-	defer bundleFile.Close()
-	if err != nil {
-		return nil, 0, fmt.Errorf("open bundle failed: %v", err)
-	}
-
 	buf := make([]byte, objMeta.Size)
-	readBytes, err := bundleFile.ReadAt(buf, int64(objMeta.Offset))
+	readBytes, err := b.readFile.ReadAt(buf, int64(objMeta.Offset))
 	if err != nil {
 		return nil, 0, fmt.Errorf("read object failed: %v", err)
 	}
@@ -210,24 +213,24 @@ func (b *Bundle) FinalizeBundle() (io.ReadSeekCloser, int64, error) {
 	binary.BigEndian.PutUint64(buf[types.MetaSizeLength:], uint64(b.version))
 	metaData = append(metaData, buf...)
 
-	written, err := b.bundleFile.Write(metaData)
+	written, err := b.writeFile.Write(metaData)
 	if err != nil {
 		return nil, 0, fmt.Errorf("write bundle meta failed: %v", err)
 	}
 	if uint64(written) != b.metaSize+types.MetaSizeLength+types.VersionLength {
-		b.bundleFile.Truncate(b.dataSize)
+		b.writeFile.Truncate(b.dataSize)
 		return nil, 0, fmt.Errorf("written size mismatch, expect: %d, actual: %d", b.metaSize+types.MetaSizeLength+types.VersionLength, written)
 	}
 
-	_, err = b.bundleFile.Seek(0, 0)
+	_, err = b.writeFile.Seek(0, 0)
 	if err != nil {
-		b.bundleFile.Truncate(b.dataSize)
+		b.writeFile.Truncate(b.dataSize)
 		return nil, 0, fmt.Errorf("seek to bundle start failed: %v", err)
 	}
 
 	b.dataSize += int64(b.metaSize + types.MetaSizeLength + types.VersionLength)
 	b.finalized = true
-	return b.bundleFile, b.dataSize, nil
+	return b.writeFile, b.dataSize, nil
 }
 
 // GetBundledObject returns the bundled object once the bundle is finalized.
@@ -242,6 +245,17 @@ func (b *Bundle) GetBundledObject() (io.ReadSeekCloser, int64, error) {
 	}
 
 	return bundleFile, b.dataSize, nil
+}
+
+// Close is used to release the resources associated with a bundle for reading and writing.
+func (b *Bundle) Close() {
+	if b.writeFile != nil {
+		b.writeFile.Close()
+	}
+
+	if b.readFile != nil {
+		b.readFile.Close()
+	}
 }
 
 // GetBundleMetaSize returns the metadata size of the bundle.

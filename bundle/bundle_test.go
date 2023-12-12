@@ -91,6 +91,7 @@ func TestNewBundle(t *testing.T) {
 
 	bundle, err := NewBundle()
 	require.NoError(t, err)
+	defer bundle.Close()
 
 	totoalDataSize := int64(0)
 	for _, object := range objects {
@@ -121,6 +122,7 @@ func TestNewBundle(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, totalSize, int64(bundle2.GetBundleSize()))
 	require.Equal(t, types.BundleVersion_V1, bundle2.version)
+	defer bundle2.Close()
 
 	for _, obj := range objects {
 		objMeta := bundle2.GetObjectMeta(obj.name)
