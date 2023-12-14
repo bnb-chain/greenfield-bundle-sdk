@@ -36,7 +36,11 @@ type Bundle struct {
 
 // NewBundle creates a new empty bundle with none object bundled.
 func NewBundle() (*Bundle, error) {
-	bundleFile, err := os.CreateTemp("", types.TempBundleFilePrefix)
+	err := os.MkdirAll(os.TempDir()+types.TempBundleDir, os.ModePerm)
+	if err != nil {
+		return nil, fmt.Errorf("create temp bundler dir failed: %v", err)
+	}
+	bundleFile, err := os.CreateTemp(os.TempDir()+types.TempBundleDir, types.TempBundleFilePrefix)
 	if err != nil {
 		return nil, fmt.Errorf("create temp bundle file failed: %v", err)
 	}
