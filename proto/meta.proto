@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+option go_package = "/types";
+
+// HashAlgo specifies the hash algorithm used to verify the integrity of the objects in the bundle.
+enum HashAlgo {
+  Unknown = 0;
+  SHA256 = 1;
+}
+
+// BundleVersion specifies the bundle version used for the current bundle.
+enum BundleVersion {
+  V1 = 0;
+}
+
+// ObjectMeta defines metadata for each object in the bundle.
+message ObjectMeta {
+  // name is the name of the object.
+  string name = 1;
+  // offset indicates the object's starting position in the bundle.
+  uint64 offset = 2;
+  // size is the size of the object.
+  uint64 size = 3;
+  // hash_algo indicates the hash algorithm used for computing the hash.
+  HashAlgo hash_algo = 4;
+  // hash is the hash result of the object.
+  bytes hash = 5;
+  // content_type indicates the content type of the object.
+  string content_type = 6;
+  // tags indicates the tags of the object, each object can be tagged with several attributes.
+  map<string, string> tags = 7;
+}
+
+// BundleMeta stores the metadata of all the objects in the bundle.
+message BundleMeta {
+  // meta indicates the object meta arrays of the bundle.
+  repeated ObjectMeta meta = 1;
+}

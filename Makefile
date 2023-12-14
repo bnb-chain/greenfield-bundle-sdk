@@ -1,4 +1,4 @@
 .PHONY: proto-gen
 
 proto-gen:
-	 protoc --go_out=. ./proto/bundle.proto
+	 protoc --go_out=. ./proto/meta.proto
