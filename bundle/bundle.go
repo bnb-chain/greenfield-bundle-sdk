@@ -126,7 +126,7 @@ func NewBundleFromFile(path string) (*Bundle, error) {
 
 // AppendObject is used for appending a new object into the non-finalized bundle.
 // Please note that this function is not thread-safe. When calling it, make sure to control concurrent invocations properly.
-func (b *Bundle) AppendObject(name string, size int64, reader io.Reader, options *types.AppendObjectOptions) (*types.ObjectMeta, error) {
+func (b *Bundle) AppendObject(name string, reader io.Reader, options *types.AppendObjectOptions) (*types.ObjectMeta, error) {
 	if b.finalized {
 		return nil, fmt.Errorf("append not allowed")
 	}
@@ -136,30 +136,25 @@ func (b *Bundle) AppendObject(name string, size int64, reader io.Reader, options
 		return nil, fmt.Errorf("duplicated name")
 	}
 
+	written, err := io.Copy(b.writeFile, reader)
+	if err != nil {
+		return nil, fmt.Errorf("copy to bundle failed: %v", err)
+	}
+
 	objMeta = &types.ObjectMeta{
 		Name:        name,
 		Offset:      uint64(b.dataSize),
-		Size:        uint64(size),
+		Size:        uint64(written),
 		HashAlgo:    types.HashAlgo_Unknown,
 		Hash:        nil,
 		ContentType: "",
 		Tags:        nil,
 	}
-
 	if options != nil {
 		objMeta.HashAlgo = options.HashAlgo
 		objMeta.Hash = options.Hash
 		objMeta.ContentType = options.ContentType
 		objMeta.Tags = options.Tags // map copy here is ok
-	}
-
-	written, err := io.Copy(b.writeFile, reader)
-	if err != nil {
-		return nil, fmt.Errorf("copy to bundle failed: %v", err)
-	}
-	if written != size {
-		b.writeFile.Truncate(b.dataSize)
-		return nil, fmt.Errorf("written size mismatch, expect: %d, actual: %d", size, written)
 	}
 
 	b.dataSize += written

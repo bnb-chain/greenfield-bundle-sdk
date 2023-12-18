@@ -96,7 +96,7 @@ func TestNewBundle(t *testing.T) {
 	totoalDataSize := int64(0)
 	for _, object := range objects {
 		buf := bytes.NewReader(object.data)
-		objMeta, err := bundle.AppendObject(object.name, object.size, buf, nil)
+		objMeta, err := bundle.AppendObject(object.name, buf, nil)
 		require.NoError(t, err)
 		totoalDataSize += int64(objMeta.Size)
 	}
