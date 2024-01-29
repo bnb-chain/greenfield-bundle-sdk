@@ -94,6 +94,42 @@ Follow the steps below to extract various objects from a bundle.
 3. Access various objects one by one using the bundle's `GetObject` method.
 4. To release resources after use, utilize the `Close` method of the bundle.
 
+
+## Command line tool
+
+The command line tool `bundler` supports two subcommands: `bundle` and `verify`.
+
+### Build
+
+```shell
+make build
+```
+
+### Usage
+
+To bundle a directory into a bundle file:
+
+```shell
+./build/bundler bundle -input <input_directory> -output <output_bundle_file>
+```
+
+To verify a bundle file:
+
+```shell
+./build/bundler verify -input <input_bundle_file>
+```
+
+If the required arguments are not provided, the tool will output usage information for the respective subcommand.
+
+### Bundle
+
+The `bundle` subcommand takes an input directory and an output bundle file as arguments. It bundles the directory into a bundle file.
+
+### Verify
+
+The `verify` subcommand takes an input bundle file as an argument. It verifies the bundle file whether the bundle is valid.
+
+
 ## Contribution
 Thank you for considering helping with the source code! We appreciate contributions from anyone on the internet, no
 matter how small the fix may be.
