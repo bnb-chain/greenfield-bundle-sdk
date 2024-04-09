@@ -47,13 +47,13 @@ func main() {
 	bundle, err := bundle.NewBundleFromFile(bundleFile.Name())
 	handleErr(err, "NewBundleFromFile")
 	defer bundle.Close()
-	objMeta1 := bundle.GetObjectMeta("object1")
-	if objMeta1 == nil {
-		handleErr(fmt.Errorf("nil object1 in bundled object"), "GetObjectMeta")
+	obj1, size, err := bundle.GetObject("object1")
+	if err != nil || obj1 == nil || size != singleObjectSize {
+		handleErr(fmt.Errorf("parse object1 in bundled object failed: %v", err), "GetObject")
 	}
-	objData2, _, err := bundle.GetObject("object2")
-	if objData2 == nil {
-		handleErr(fmt.Errorf("nil object2 in bundled object"), "GetObjectMeta")
+	obj2, size, err := bundle.GetObject("object2")
+	if err != nil || obj2 == nil || size != singleObjectSize {
+		handleErr(fmt.Errorf("parse object2 in bundled object failed: %v", err), "GetObject")
 	}
 
 	log.Printf("Congratulations, everything going well!")
