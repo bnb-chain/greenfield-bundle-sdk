@@ -86,7 +86,7 @@ Follow the steps below to aggregate multiple objects into a single bundle.
 3. Use the bundle's `FinalizeBundle` method to seal the bundle, preventing any further objects from being added.
 4. To release resources after use, utilize the `Close` method of the bundle.
 
-Please check the [upload example](https://github.com/bnb-chain/greenfield-bundle-sdk/examples/upload_bundle.go) for additional information.
+Please check the [upload example](https://github.com/bnb-chain/greenfield-bundle-sdk/blob/master/examples/upload_bundle.go) for additional information.
 
 ### Extract objects from bundled object
 Follow the steps below to extract various objects from a bundle.
@@ -96,7 +96,7 @@ Follow the steps below to extract various objects from a bundle.
 3. Access various objects one by one using the bundle's `GetObject` method.
 4. To release resources after use, utilize the `Close` method of the bundle.
 
-Please check the [download example](https://github.com/bnb-chain/greenfield-bundle-sdk/examples/download_bundle.go) for additional information.
+Please check the [download example](https://github.com/bnb-chain/greenfield-bundle-sdk/blob/master/examples/download_bundle.go) for additional information.
 
 ## Command line tool
 
